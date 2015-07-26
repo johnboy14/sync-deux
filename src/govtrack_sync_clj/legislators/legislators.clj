@@ -70,8 +70,7 @@
                          (let [[_ result] (tx/execute
                                             connection
                                             transaction
-                                            (construct-neo4j-legislators file))]
-                           (println result)))))
+                                            (construct-neo4j-legislators file))]))))
 
 (defn persist-legislators [config file-loc index type]
   (let [connection (esr/connect (:url config))]

@@ -4,6 +4,7 @@
     [clojurewerkz.elastisch.rest.index :as esi]
     [clojurewerkz.elastisch.rest.document :as esd]
     [clojurewerkz.neocons.rest :as nr]
+    [clojurewerkz.neocons.rest.cypher        :as cy]
     [govtrack-sync-clj.legislators.legislators :as leg]))
 
 (def es-config {:url "http://localhost:9200" :indexes ["congress"]
@@ -92,7 +93,9 @@
 
 (facts "A Suite of tests for parsing legislator data from a .yaml file, this data is then indexed into Neo4J"
        (fact "Given a legislator.yaml file location, add the legislators to Neo4J"
-             (let [connection (nr/connect (:neo-url es-config) (:neo-username es-config) (:neo-password es-config))]
-               (leg/persist-legislators-neo "test-resources/legislators/legislators-current.yaml" connection))))
+             (let [connection (nr/connect (:neo-url es-config) (:neo-username es-config) (:neo-password es-config))
+                   _ (leg/persist-legislators-neo "test-resources/legislators/legislators-current.yaml" connection)
+                   {:keys [data columns]} (cy/query connection "MATCH (l:Legislator) RETURN l")]
+               (count data) => 2)))
 
 
