@@ -3,5 +3,5 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [clj-yaml "0.4.0"]
                  [clojurewerkz/elastisch "2.1.0"]]
-  :profiles {:dev {:dependencies [[midje "1.5.1"]]}})
+  :profiles {:dev {:dependencies [[midje "1.7.0"]]}})
   
