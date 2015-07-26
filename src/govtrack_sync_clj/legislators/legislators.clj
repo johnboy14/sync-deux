@@ -1,7 +1,9 @@
 (ns govtrack-sync-clj.legislators.legislators
   (:require [clj-yaml.core :as yaml]
-            [clojurewerkz.elastisch.rest.document :as esd]
-            [clojurewerkz.elastisch.rest.bulk :as esb]))
+            [clojurewerkz.elastisch.rest :as esr]
+            [clojurewerkz.elastisch.rest.bulk :as esb]
+            [clojurewerkz.neocons.rest.transaction   :as tx]
+            [cheshire.core :as ch]))
 
 (defn parse-legislator [legislator]
   (let [id (:id legislator)
@@ -41,27 +43,36 @@
        (assoc :rss_url (:rss_url current_term))
        )))
 
-
-;- type: sen
-;start: '2013-01-03'
-;end: '2019-01-03'
-;state: OH
-;party: Democrat
-;class: 1
-;url: http://www.brown.senate.gov
-;address: 713 Hart Senate Office Building Washington DC 20510
-;phone: 202-224-2315
-;fax: 202-228-6321
-;contact_form: http://www.brown.senate.gov/contact
-;office: 713 Hart Senate Office Building
-;state_rank: senior
-;rss_url: http://www.brown.senate.gov/rss/feeds/?type=all&amp;
+(defn prepare-map-for-merge [m]
+  (reduce str (butlast (butlast (reduce str (map (fn [[k v]] (str (reduce str (rest (str (str k) ": "))) "'" v "', ")) m))))))
 
 (defn parse-legislators [legislators]
   (->> legislators
        (map parse-legislator)))
 
+(defn create-neo4j-statement [legislator]
+  (tx/statement (str "MERGE (l:Legislator {" (prepare-map-for-merge legislator) "}) return l")))
+
 (defn persist-legislators-es [file connection index type]
   (let [legislators (yaml/parse-string (slurp (java.io.File. file)))
         parsed-legislators (parse-legislators legislators)]
     (esb/bulk-with-index-and-type connection index (str type) (esb/bulk-index parsed-legislators))))
+
+(defn construct-neo4j-legislators [file]
+  (let [legislators (yaml/parse-string (slurp (java.io.File. file)))
+        parsed-legislators (parse-legislators legislators)
+        neo4j-statements (map create-neo4j-statement parsed-legislators)]
+    neo4j-statements))
+
+(defn persist-legislators-neo [file connection]
+  (let [transaction (tx/begin-tx connection)]
+    (tx/with-transaction connection transaction true
+                         (let [[_ result] (tx/execute
+                                            connection
+                                            transaction
+                                            (construct-neo4j-legislators file))]
+                           (println result)))))
+
+(defn persist-legislators [config file-loc index type]
+  (let [connection (esr/connect (:url config))]
+    (persist-legislators-es file-loc connection index type)))
