@@ -2,8 +2,8 @@
   (:require [clj-yaml.core :as yaml]
             [clojurewerkz.elastisch.rest :as esr]
             [clojurewerkz.elastisch.rest.bulk :as esb]
-            [clojurewerkz.neocons.rest.transaction   :as tx]
-            [cheshire.core :as ch]))
+            [clojurewerkz.neocons.rest.cypher :as cy]
+            [clojurewerkz.neocons.rest.nodes :as nn]))
 
 (defn parse-legislator [legislator]
   (let [id (:id legislator)
@@ -40,41 +40,32 @@
        (assoc :phone (:phone current_term))
        (assoc :fax (:fax current_term))
        (assoc :state_rank (:state_rank current_term))
-       (assoc :rss_url (:rss_url current_term))
-       )))
-
-(defn escape-single-quotes [word]
-  (if-not (nil? word)
-    (clojure.string/escape word {\' " "})))
-
-(defn prepare-map-for-merge [m]
-  (reduce str (butlast (butlast (reduce str (map (fn [[k v]] (str (reduce str (rest (str (str k) ": "))) "'" (escape-single-quotes v) "', ")) m))))))
+       (assoc :rss_url (:rss_url current_term)))))
 
 (defn parse-legislators [legislators]
   (->> legislators
        (map parse-legislator)))
 
-(defn create-neo4j-statement [legislator]
-  (tx/statement (str "MERGE (l:Legislator {" (prepare-map-for-merge legislator) "}) return l")))
+
+(defn retrieve-existing-legislator-id [connection thomas-id]
+  (cy/query connection (str "MATCH (l:Legislator {thomas: '"thomas-id"'}) return id(l)")))
 
 (defn persist-legislators-es [file connection index type]
   (let [legislators (yaml/parse-string (slurp (java.io.File. file)))
         parsed-legislators (parse-legislators legislators)]
     (esb/bulk-with-index-and-type connection index (str type) (esb/bulk-index parsed-legislators))))
 
-(defn construct-neo4j-legislators [file]
+(defn construct-and-persist-neo4j-legislators [connection file]
   (let [legislators (yaml/parse-string (slurp (java.io.File. file)))
-        parsed-legislators (parse-legislators legislators)
-        neo4j-statements (map create-neo4j-statement parsed-legislators)]
-    neo4j-statements))
+        parsed-legislators (parse-legislators legislators)]
+    (doseq [legislator parsed-legislators]
+      (let [existing-id (retrieve-existing-legislator-id connection (:thomas legislator))]
+        (if-not (nil? existing-id)
+          (nn/create connection legislator)
+          (nn/update connection existing-id legislator))))))
 
 (defn persist-legislators-neo [file connection]
-  (let [transaction (tx/begin-tx connection)]
-    (tx/with-transaction connection transaction true
-                         (let [[_ result] (tx/execute
-                                            connection
-                                            transaction
-                                            (construct-neo4j-legislators file))]))))
+  (construct-and-persist-neo4j-legislators connection file))
 
 (defn persist-legislators [config file-loc index type]
   (let [connection (esr/connect (:url config))]

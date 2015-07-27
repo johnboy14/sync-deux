@@ -95,7 +95,8 @@
        (fact "Given a legislator.yaml file location, add the legislators to Neo4J"
              (let [connection (nr/connect (:neo-url es-config) (:neo-username es-config) (:neo-password es-config))
                    _ (leg/persist-legislators-neo "test-resources/legislators/legislators-current.yaml" connection)
-                   {:keys [data columns]} (cy/query connection "MATCH (l:Legislator) RETURN l")]
-               (count data) => 2)))
+                   {:keys [data columns]} (cy/query connection "MATCH (l:Legislator) RETURN l.thomas")]
+               (count data) => 2
+               (first data) => (contains ["00136"]))))
 
 
