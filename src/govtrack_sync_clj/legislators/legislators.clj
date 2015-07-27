@@ -43,8 +43,12 @@
        (assoc :rss_url (:rss_url current_term))
        )))
 
+(defn escape-single-quotes [word]
+  (if-not (nil? word)
+    (clojure.string/escape word {\' " "})))
+
 (defn prepare-map-for-merge [m]
-  (reduce str (butlast (butlast (reduce str (map (fn [[k v]] (str (reduce str (rest (str (str k) ": "))) "'" v "', ")) m))))))
+  (reduce str (butlast (butlast (reduce str (map (fn [[k v]] (str (reduce str (rest (str (str k) ": "))) "'" (escape-single-quotes v) "', ")) m))))))
 
 (defn parse-legislators [legislators]
   (->> legislators
