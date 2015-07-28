@@ -1,49 +1,20 @@
 (ns govtrack-sync-clj.legislators.legislators-test
   (:use midje.sweet)
   (:require [clojurewerkz.elastisch.rest :as esr]
-    [clojurewerkz.elastisch.rest.index :as esi]
     [clojurewerkz.elastisch.rest.document :as esd]
     [clojurewerkz.neocons.rest :as nr]
-    [clojurewerkz.neocons.rest.cypher        :as cy]
-    [clojurewerkz.neocons.rest.constraints :as nrc]
-    [govtrack-sync-clj.legislators.legislators :as leg]))
+    [clojurewerkz.neocons.rest.cypher :as cy]
+    [govtrack-sync-clj.legislators.legislators :as leg]
+    [govtrack-sync-clj.utils.test-utils :as utils]))
 
-(def es-config {:url "http://localhost:9200" :indexes ["congress"]
-                :neo-url "http://localhost:7474/db/data" :neo-username "neo4j" :neo-password "password"})
 
-(defn clean-es [config]
-  (let [connection (esr/connect (:url config))]
-    (doseq [index (:indexes config)]
-      (esi/delete connection index))))
-
-(defn create-es [config]
-  (let [connection (esr/connect (:url config))]
-    (doseq [index (:indexes config)]
-      (esi/create connection index))))
-
-(defn clear-all-nodes [config]
-  (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
-    (cy/query connection "MATCH n DELETE n")))
-
-(defn clear-constraints [config]
-  (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
-    (try
-      (nrc/drop-unique connection "Legislator" "thomas")
-      (catch Exception e (println e)))))
-
-(defn create-constraints [config]
-  (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
-    (try
-      (nrc/create-unique connection "Legislator" "thomas")
-      (catch Exception e (println e)))))
 
 (facts "A Suite of tests for parsing legislator data from a .yaml file, this data is then synced to
         elasticsearch"
-       (against-background [(before :facts (do (clean-es es-config)
-                                               (create-es es-config)))]
+       (against-background [(before :facts (utils/teardown-setup))]
                            (fact "Given a .yaml file containing two govtrack_sync_clj.legislators, then parse and persist to elasticsearch"
-                                 (let [connection (esr/connect (:url es-config))
-                                       _ (leg/persist-legislators-es "test-resources/legislators/legislators-current.yaml" connection "congress" "legislator")
+                                 (let [connection (esr/connect (:url utils/es-config))
+                                       _ (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
                                        legislator (esd/get connection "congress" "legislator" "00136")]
                                    (:_source legislator) => (contains {:thomas "00136"
                                                                        :bioguide "B000944"
@@ -76,8 +47,8 @@
                                                                        :end  "2019-01-03"})))
 
                            (fact "Given a legislator .yaml file location, index and type, then persist records to database"
-                                 (let [_ (leg/persist-legislators es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
-                                       legislator (esd/get (esr/connect (:url es-config)) "congress" "legislator" "00136")]
+                                 (let [_ (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
+                                       legislator (esd/get (esr/connect (:url utils/es-config)) "congress" "legislator" "00136")]
                                    (:_source legislator) => (contains {:thomas "00136"
                                                                        :bioguide "B000944"
                                                                        :lis "S307"
@@ -109,13 +80,12 @@
                                                                        :end  "2019-01-03"})))))
 
 (facts "A Suite of tests for parsing legislator data from a .yaml file, this data is then indexed into Neo4J"
-       (against-background [(before :facts (do (clear-constraints es-config)
-                                               (clear-all-nodes es-config)
-                                               (create-constraints es-config)))])
+       (against-background [(before :facts (utils/teardown-setup))])
+
        (fact "Given a legislator.yaml file location, add the legislators to Neo4J"
-             (let [connection (nr/connect (:neo-url es-config) (:neo-username es-config) (:neo-password es-config))
-                   create (leg/persist-legislators-neo "test-resources/legislators/legislators-current.yaml" connection)
-                   update (leg/persist-legislators-neo "test-resources/legislators/legislators-current.yaml" connection)
+             (let [connection (nr/connect (:neo-url utils/es-config) (:neo-username utils/es-config) (:neo-password utils/es-config))
+                   create (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
+                   update (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
                    {:keys [data columns]} (cy/query connection "MATCH (l:Legislator) RETURN l.thomas")]
                (count data) => 2
                (first data) => (contains ["00136"]))))
