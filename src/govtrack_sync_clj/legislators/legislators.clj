@@ -5,7 +5,8 @@
             [clojurewerkz.neocons.rest.cypher :as cy]
             [clojurewerkz.neocons.rest.nodes :as nn]
             [clojurewerkz.neocons.rest.labels :as nl]
-            [clojurewerkz.neocons.rest :as nr]))
+            [clojurewerkz.neocons.rest :as nr]
+            [clojure.tools.logging :as log]))
 
 (defn- parse-legislator [legislator]
   (let [id (:id legislator)
@@ -72,6 +73,7 @@
   (construct-and-persist-neo4j-legislators connection file))
 
 (defn persist-legislators [config file-loc index type]
+  (log/info "Starting Legislator Task")
   (let [es-connection (esr/connect (:url config))
         neo-connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
     (persist-legislators-es file-loc es-connection index type)
