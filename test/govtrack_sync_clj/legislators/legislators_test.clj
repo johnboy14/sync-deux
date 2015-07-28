@@ -5,6 +5,7 @@
     [clojurewerkz.elastisch.rest.document :as esd]
     [clojurewerkz.neocons.rest :as nr]
     [clojurewerkz.neocons.rest.cypher        :as cy]
+    [clojurewerkz.neocons.rest.constraints :as nrc]
     [govtrack-sync-clj.legislators.legislators :as leg]))
 
 (def es-config {:url "http://localhost:9200" :indexes ["congress"]
@@ -19,6 +20,18 @@
   (let [connection (esr/connect (:url config))]
     (doseq [index (:indexes config)]
       (esi/create connection index))))
+
+(defn clear-constraints [config]
+  (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
+    (try
+      (nrc/drop-unique connection "Legislator" "thomas")
+      (catch Exception e))))
+
+(defn create-constraints [config]
+  (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
+    (try
+      (nrc/create-unique connection "Legislator" "thomas")
+      (catch Exception e))))
 
 (facts "A Suite of tests for parsing legislator data from a .yaml file, this data is then synced to
         elasticsearch"
@@ -92,9 +105,12 @@
                                                                        :end  "2019-01-03"})))))
 
 (facts "A Suite of tests for parsing legislator data from a .yaml file, this data is then indexed into Neo4J"
+       (against-background [(before :facts (do (clear-constraints es-config)
+                                               (create-constraints es-config)))])
        (fact "Given a legislator.yaml file location, add the legislators to Neo4J"
              (let [connection (nr/connect (:neo-url es-config) (:neo-username es-config) (:neo-password es-config))
-                   _ (leg/persist-legislators-neo "test-resources/legislators/legislators-current.yaml" connection)
+                   create (leg/persist-legislators-neo "test-resources/legislators/legislators-current.yaml" connection)
+                   update (leg/persist-legislators-neo "test-resources/legislators/legislators-current.yaml" connection)
                    {:keys [data columns]} (cy/query connection "MATCH (l:Legislator) RETURN l.thomas")]
                (count data) => 2
                (first data) => (contains ["00136"]))))
