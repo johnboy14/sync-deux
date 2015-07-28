@@ -46,7 +46,6 @@
   (->> legislators
        (map parse-legislator)))
 
-
 (defn retrieve-existing-legislator-id [connection thomas-id]
   (cy/query connection (str "MATCH (l:Legislator {thomas: '"thomas-id"'}) return id(l)")))
 
