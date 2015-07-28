@@ -21,17 +21,21 @@
     (doseq [index (:indexes config)]
       (esi/create connection index))))
 
+(defn clear-all-nodes [config]
+  (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
+    (cy/query connection "MATCH n DELETE n")))
+
 (defn clear-constraints [config]
   (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
     (try
       (nrc/drop-unique connection "Legislator" "thomas")
-      (catch Exception e))))
+      (catch Exception e (println e)))))
 
 (defn create-constraints [config]
   (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
     (try
       (nrc/create-unique connection "Legislator" "thomas")
-      (catch Exception e))))
+      (catch Exception e (println e)))))
 
 (facts "A Suite of tests for parsing legislator data from a .yaml file, this data is then synced to
         elasticsearch"
@@ -106,6 +110,7 @@
 
 (facts "A Suite of tests for parsing legislator data from a .yaml file, this data is then indexed into Neo4J"
        (against-background [(before :facts (do (clear-constraints es-config)
+                                               (clear-all-nodes es-config)
                                                (create-constraints es-config)))])
        (fact "Given a legislator.yaml file location, add the legislators to Neo4J"
              (let [connection (nr/connect (:neo-url es-config) (:neo-username es-config) (:neo-password es-config))
