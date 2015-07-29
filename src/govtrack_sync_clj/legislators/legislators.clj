@@ -6,7 +6,8 @@
             [clojurewerkz.neocons.rest.nodes :as nn]
             [clojurewerkz.neocons.rest.labels :as nl]
             [clojurewerkz.neocons.rest :as nr]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log])
+  (:gen-class))
 
 (defn- parse-legislator [legislator]
   (let [id (:id legislator)

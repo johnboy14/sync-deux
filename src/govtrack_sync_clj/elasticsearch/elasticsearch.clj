@@ -1,4 +1,5 @@
-(ns govtrack-sync-clj.elasticsearch
+(ns govtrack-sync-clj.elasticsearch.elasticsearch
+  (:gen-class)
   (:require [clojurewerkz.elastisch.rest.bulk :as esrb]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async]

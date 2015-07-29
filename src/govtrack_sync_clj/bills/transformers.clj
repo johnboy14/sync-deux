@@ -1,4 +1,5 @@
 (ns govtrack-sync-clj.bills.transformers
+  (:gen-class)
   (:require [cheshire.core :as ch]))
 
 (defn set-sponsor [bill]

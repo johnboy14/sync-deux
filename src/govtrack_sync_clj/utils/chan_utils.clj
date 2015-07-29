@@ -1,4 +1,5 @@
 (ns govtrack-sync-clj.utils.chan-utils
+  (:gen-class)
   (:require [clojure.core.async :as async]))
 
 (defn drained? [map]

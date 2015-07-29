@@ -1,4 +1,5 @@
 (ns govtrack-sync-clj.bills.bills
+  (:gen-class)
   (:require [clojurewerkz.elastisch.rest :as nsr]
             [clojurewerkz.elastisch.rest.document]
             [clojurewerkz.neocons.rest :as nr]
@@ -8,7 +9,7 @@
             [clojurewerkz.neocons.rest.labels :as nl]
             [clojure.core.async :as async]
             [clojure.tools.logging :as log]
-            [govtrack-sync-clj.elasticsearch :as es-client]
+            [govtrack-sync-clj.elasticsearch.elasticsearch :as es-client]
             [govtrack-sync-clj.utils.file-utils :as utils]
             [govtrack-sync-clj.utils.chan-utils :as chan-utils]
             [govtrack-sync-clj.bills.transformers :as transformer]))

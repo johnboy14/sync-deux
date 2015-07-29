@@ -1,4 +1,5 @@
 (ns govtrack-sync-clj.utils.file-utils
+  (:gen-class)
   (:require [clojure.walk :as w]
             [clojure.java.io :as io]))
 
