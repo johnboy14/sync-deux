@@ -3,6 +3,7 @@
             [clojurewerkz.elastisch.rest.document]
             [clojurewerkz.neocons.rest :as nr]
             [clojurewerkz.neocons.rest.nodes :as nn]
+            [clojurewerkz.neocons.rest.relationships :as nnr]
             [clojurewerkz.neocons.rest.cypher :as cy]
             [clojurewerkz.neocons.rest.labels :as nl]
             [clojure.core.async :as async]
@@ -13,6 +14,12 @@
             [govtrack-sync-clj.bills.transformers :as transformer]))
 
 (def drained-message "{\"drained\":\"true\"}")
+
+(defn retrieve-id [connection query]
+  (let [data (:data (cy/query connection query))]
+    (if (empty? data)
+      nil
+      (long (first (first data))))))
 
 (defn retrieve-bill-id [connection id]
   (let [data (:data (cy/query connection (str "MATCH (b:Bill {bill_id: '" id "'}) return id(b)")))]
@@ -32,6 +39,15 @@
 (defn persist-bill-to-es [connection index type chan promise]
   (es-client/write-to-es connection index type chan promise))
 
+(defn create-bill-sponsor-rel [connection from sponsor]
+  (let [existing-rel (nnr/all-for connection from)
+        sponsor-id (retrieve-id connection (str "MATCH (l:Legislator {thomas: '" sponsor "'}) return id(l)"))
+        exisiting-sponsor (nn/get connection sponsor-id)]
+    (println existing-rel)
+    (if (and (empty? existing-rel) (not (nil? exisiting-sponsor)))
+      (do (nnr/create connection from exisiting-sponsor "sponsoredby")
+          (nnr/create connection exisiting-sponsor from "sponsoring")))))
+
 (defn persist-bill-to-neo [connection chan promise]
   (async/go-loop []
     (let [[batch drained?] (chan-utils/batch chan 500)]
@@ -39,7 +55,9 @@
         (doseq [bill batch]
           (let [existing-id (retrieve-bill-id connection (:bill_id bill))]
             (if (nil? existing-id)
-              (nl/add connection (nn/create connection bill) "Bill")
+              (let [bill-node (nn/create connection bill)]
+                (nl/add connection bill-node "Bill")
+                (create-bill-sponsor-rel connection bill-node (:sponsor bill)))
               (nn/update connection existing-id bill)))))
       (if (false? drained?)
         (recur)

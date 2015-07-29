@@ -23,6 +23,10 @@
   (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
     (cy/query connection "MATCH n DELETE n")))
 
+(defn clear-all-relationships [config]
+  (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
+    (cy/query connection "START r=relationship(*) DELETE r")))
+
 (defn clear-constraints [config]
   (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
     (try
@@ -40,6 +44,7 @@
 (defn teardown-setup []
   (clean-es es-config)
   (create-es es-config)
+  (clear-all-relationships es-config)
   (clear-all-nodes es-config)
   (clear-constraints es-config)
   (create-constraints es-config))

@@ -1,6 +1,9 @@
 (ns govtrack-sync-clj.bills.transformers
   (:require [cheshire.core :as ch]))
 
+(defn set-sponsor [bill]
+  (assoc bill :sponsor (:thomas_id (:sponsor bill))))
+
 (defn retrieve-bill-details [bill]
   (-> bill
       (dissoc :actions)
@@ -9,7 +12,8 @@
       (dissoc :cosponsors)
       (dissoc :related_bills)
       (dissoc :history)
-      (dissoc :sponsor)
+      (set-sponsor)
+      ;(dissoc :sponsor)
       (dissoc :subjects)
       (dissoc :summary)
       (dissoc :titles)
