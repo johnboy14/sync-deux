@@ -5,12 +5,19 @@
 (defn set-sponsor [bill]
   (assoc bill :sponsor (:thomas_id (:sponsor bill))))
 
+(defn set-cosponsors [bill]
+  (loop [cosponsors (:cosponsors bill)
+         acc ""]
+    (if (empty? (rest cosponsors))
+      (assoc bill :cosponsors (str acc (:thomas_id (first cosponsors))))
+      (recur (last cosponsors) (str acc (:thomas_id (first cosponsors)) ",")))))
+
 (defn retrieve-bill-details [bill]
   (-> bill
       (dissoc :actions)
       (dissoc :amendments)
       (dissoc :committees)
-      (dissoc :cosponsors)
+      (set-cosponsors)
       (dissoc :related_bills)
       (dissoc :history)
       (set-sponsor)
