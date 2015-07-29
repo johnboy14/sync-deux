@@ -10,7 +10,7 @@
          acc ""]
     (if (empty? (rest cosponsors))
       (assoc bill :cosponsors (str acc (:thomas_id (first cosponsors))))
-      (recur (last cosponsors) (str acc (:thomas_id (first cosponsors)) ",")))))
+      (recur (rest cosponsors) (str acc (:thomas_id (first cosponsors)) ",")))))
 
 (defn retrieve-bill-details [bill]
   (-> bill
@@ -21,7 +21,6 @@
       (dissoc :related_bills)
       (dissoc :history)
       (set-sponsor)
-      ;(dissoc :sponsor)
       (dissoc :subjects)
       (dissoc :summary)
       (dissoc :titles)

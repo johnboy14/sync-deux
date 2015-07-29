@@ -44,7 +44,8 @@
        (assoc :phone (:phone current_term))
        (assoc :fax (:fax current_term))
        (assoc :state_rank (:state_rank current_term))
-       (assoc :rss_url (:rss_url current_term)))))
+       (assoc :rss_url (:rss_url current_term))
+       ((fn [m] (into {} (remove (fn [[_ v]] (nil? v)) m)))))))
 
 (defn- parse-legislators [legislators]
   (->> legislators

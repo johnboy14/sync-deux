@@ -12,9 +12,15 @@
             [govtrack-sync-clj.elasticsearch.elasticsearch :as es-client]
             [govtrack-sync-clj.utils.file-utils :as utils]
             [govtrack-sync-clj.utils.chan-utils :as chan-utils]
-            [govtrack-sync-clj.bills.transformers :as transformer]))
+            [govtrack-sync-clj.bills.transformers :as transformer]
+            [clojure.string :as str]))
 
 (def drained-message "{\"drained\":\"true\"}")
+
+(defn get-node [connection id]
+  (if (nil? id)
+    nil
+    (nn/get connection id)))
 
 (defn retrieve-id [connection query]
   (let [data (:data (cy/query connection query))]
@@ -41,13 +47,22 @@
   (es-client/write-to-es connection index type chan promise))
 
 (defn create-bill-sponsor-rel [connection from sponsor]
-  (let [existing-rel (nnr/all-for connection from)
+  (let [existing-rel (nnr/all-for connection from :types [:sponsoring :sponsoredby])
         sponsor-id (retrieve-id connection (str "MATCH (l:Legislator {thomas: '" sponsor "'}) return id(l)"))
-        exisiting-sponsor (nn/get connection sponsor-id)]
-    (println existing-rel)
+        exisiting-sponsor (get-node connection sponsor-id)]
     (if (and (empty? existing-rel) (not (nil? exisiting-sponsor)))
       (do (nnr/create connection from exisiting-sponsor "sponsoredby")
           (nnr/create connection exisiting-sponsor from "sponsoring")))))
+
+(defn create-bill-cosponsor-rel [connection from cosponsors]
+  (if-not (nil? cosponsors)
+    (doseq [cosponsor (str/split cosponsors #",")]
+      (let [existing-rel (nnr/all-for connection from :types [:cosponsoring :cosponsoredby])
+            sponsor-id (retrieve-id connection (str "MATCH (l:Legislator {thomas: '" cosponsor "'}) return id(l)"))
+            exisiting-sponsor (get-node connection sponsor-id)]
+        (if (and (empty? existing-rel) (not (nil? exisiting-sponsor)))
+          (do (nnr/create connection from exisiting-sponsor "cosponsoredby")
+              (nnr/create connection exisiting-sponsor from "cosponsoring")))))))
 
 (defn persist-bill-to-neo [connection chan promise]
   (async/go-loop []
@@ -58,7 +73,8 @@
             (if (nil? existing-id)
               (let [bill-node (nn/create connection bill)]
                 (nl/add connection bill-node "Bill")
-                (create-bill-sponsor-rel connection bill-node (:sponsor bill)))
+                (create-bill-sponsor-rel connection bill-node (:sponsor bill))
+                (create-bill-cosponsor-rel connection bill-node (:cosponsors bill)))
               (nn/update connection existing-id bill)))))
       (if (false? drained?)
         (recur)
