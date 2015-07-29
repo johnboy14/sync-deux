@@ -77,4 +77,5 @@
   (let [es-connection (esr/connect (:url config))
         neo-connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
     (persist-legislators-es file-loc es-connection index type)
-    (persist-legislators-neo file-loc neo-connection)))
+    (persist-legislators-neo file-loc neo-connection))
+  (log/info "Stopping Legislator Task"))

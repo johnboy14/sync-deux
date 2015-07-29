@@ -1,0 +1,89 @@
+{
+  "actions": [
+    {
+      "acted_at": "2015-07-16",
+      "committees": [
+        "SSHR"
+      ],
+      "references": [
+
+      ],
+      "status": "REFERRED",
+      "text": "Read twice and referred to the Committee on Health, Education, Labor, and Pensions.",
+      "type": "referral"
+    }
+  ],
+  "amendments": [
+
+  ],
+  "bill_id": "s1787-114",
+  "bill_type": "s",
+  "by_request": false,
+  "committees": [
+    {
+      "activity": [
+        "referral"
+      ],
+      "committee": "Senate Health, Education, Labor, and Pensions",
+      "committee_id": "SSHR"
+    }
+  ],
+  "congress": "114",
+  "cosponsors": [
+    {
+      "district": null,
+      "name": "Manchin, Joe, III",
+      "sponsored_at": "2015-07-16",
+      "state": "WV",
+      "thomas_id": "01983",
+      "title": "Sen",
+      "withdrawn_at": null
+    }
+  ],
+  "enacted_as": null,
+  "history": {
+    "active": false,
+    "awaiting_signature": false,
+    "enacted": false,
+    "vetoed": false
+  },
+  "introduced_at": "2015-07-16",
+  "number": "1787",
+  "official_title": "A bill to amend title V of the Elementary and Secondary Education Act of 1965 to establish a full-service community schools grant program.",
+  "popular_title": null,
+  "related_bills": [
+
+  ],
+  "short_title": "Full-Service Community Schools Act of 2015",
+  "sponsor": {
+    "district": null,
+    "name": "Brown, Sherrod",
+    "state": "OH",
+    "thomas_id": "00136",
+    "title": "Sen",
+    "type": "person"
+  },
+  "status": "REFERRED",
+  "status_at": "2015-07-16",
+  "subjects": [
+
+  ],
+  "subjects_top_term": null,
+  "summary": null,
+  "titles": [
+    {
+      "as": "introduced",
+      "is_for_portion": false,
+      "title": "Full-Service Community Schools Act of 2015",
+      "type": "short"
+    },
+    {
+      "as": "introduced",
+      "is_for_portion": false,
+      "title": "A bill to amend title V of the Elementary and Secondary Education Act of 1965 to establish a full-service community schools grant program.",
+      "type": "official"
+    }
+  ],
+  "updated_at": "2015-07-25T07:04:10-04:00",
+  "url": "http://thomas.loc.gov/cgi-bin/bdquery/z?d114:SN1787:@@@L&summ2=m&"
+}

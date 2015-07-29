@@ -7,6 +7,7 @@
                  [cheshire "5.5.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.apache.logging.log4j/log4j-slf4j-impl "2.0.2"]
-                 [org.apache.logging.log4j/log4j-core "2.0.2"]]
+                 [org.apache.logging.log4j/log4j-core "2.0.2"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:dev {:dependencies [[midje "1.7.0"]]}})
   
