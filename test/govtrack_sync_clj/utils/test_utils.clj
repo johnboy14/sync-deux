@@ -6,7 +6,8 @@
             [clojurewerkz.neocons.rest.cypher :as cy]))
 
 (def es-config {:url "http://localhost:9200" :indexes ["congress"]
-                :neo-url "http://localhost:7474/db/data" :neo-username "neo4j" :neo-password "password"})
+                :neo-url "http://localhost:7474/db/data" :neo-username "neo4j" :neo-password "password"
+                :bill-dir "test-resources/bills" :es-index "congress" :es-bill-type "bill"})
 
 (defn clean-es [config]
   (let [connection (esr/connect (:url config))]
@@ -26,12 +27,14 @@
   (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
     (try
       (nrc/drop-unique connection "Legislator" "thomas")
+      (nrc/drop-unique connection "Bill" "bill_id")
       (catch Exception e (println e)))))
 
 (defn create-constraints [config]
   (let [connection (nr/connect (:neo-url config) (:neo-username config) (:neo-password config))]
     (try
       (nrc/create-unique connection "Legislator" "thomas")
+      (nrc/create-unique connection "Bill" "bill_id")
       (catch Exception e (println e)))))
 
 (defn teardown-setup []
