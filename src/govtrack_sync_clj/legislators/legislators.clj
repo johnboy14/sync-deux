@@ -6,7 +6,8 @@
             [clojurewerkz.neocons.rest.nodes :as nn]
             [clojurewerkz.neocons.rest.labels :as nl]
             [clojurewerkz.neocons.rest :as nr]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [govtrack-sync-clj.utils.file-utils :as utils])
   (:gen-class))
 
 (defn- parse-legislator [legislator]
@@ -51,12 +52,6 @@
   (->> legislators
        (map parse-legislator)))
 
-(defn- retrieve-existing-legislator-id [connection thomas-id]
-  (let [data (:data (cy/query connection (str "MATCH (l:Legislator {thomas: '" thomas-id "'}) return id(l)")))]
-    (if (empty? data)
-      nil
-      (long (first (first data))))))
-
 (defn- persist-legislators-es [file connection index type]
   (let [legislators (yaml/parse-string (slurp (java.io.File. file)))
         parsed-legislators (parse-legislators legislators)]
@@ -66,7 +61,7 @@
   (let [legislators (yaml/parse-string (slurp (java.io.File. file)))
         parsed-legislators (parse-legislators legislators)]
     (doseq [legislator parsed-legislators]
-      (let [existing-id (retrieve-existing-legislator-id connection (:thomas legislator))]
+      (let [existing-id (utils/retrieve-id connection (str "MATCH (l:Legislator {thomas: '" (:thomas legislator) "'}) return id(l)"))]
         (if (nil? existing-id)
           (nl/add connection (nn/create connection legislator) "Legislator")
           (nn/update connection existing-id legislator))))))
