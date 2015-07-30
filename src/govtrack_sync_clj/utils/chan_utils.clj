@@ -1,6 +1,8 @@
 (ns govtrack-sync-clj.utils.chan-utils
   (:gen-class)
-  (:require [clojure.core.async :as async]))
+  (:require [clojure.core.async :as async]
+            [clojure.tools.logging :as log]
+            [govtrack-sync-clj.utils.file-utils :as utils]))
 
 (defn drained? [map]
   (if (contains? map :drained)
@@ -17,3 +19,14 @@
     (if (drained? (last batch))
       [(filter #(not (contains? % :drained)) batch) true]
       [batch false])))
+
+(def drained-message "{\"drained\":\"true\"}")
+
+(defn slurp-files-onto-chan [dir chan promise]
+  (log/info "Reading Files Directory " dir)
+  (async/go
+    (doseq [file (utils/walk dir (re-pattern ".*data.json"))]
+      (async/>!! chan (slurp file)))
+    (log/info (str "Finished Reading Files Directory " dir))
+    (async/>!! chan drained-message)
+    (deliver promise true)))

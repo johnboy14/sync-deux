@@ -1,4 +1,5 @@
 *.idea/
 *target/
 .nrepl-port
+.lein-repl-history
 govtrack_sync_clj.iml

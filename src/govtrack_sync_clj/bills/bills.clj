@@ -15,41 +15,13 @@
             [govtrack-sync-clj.bills.transformers :as transformer]
             [clojure.string :as str]))
 
-(def drained-message "{\"drained\":\"true\"}")
-
-(defn get-node [connection id]
-  (if (nil? id)
-    nil
-    (nn/get connection id)))
-
-(defn retrieve-id [connection query]
-  (let [data (:data (cy/query connection query))]
-    (if (empty? data)
-      nil
-      (long (first (first data))))))
-
-(defn retrieve-bill-id [connection id]
-  (let [data (:data (cy/query connection (str "MATCH (b:Bill {bill_id: '" id "'}) return id(b)")))]
-    (if (empty? data)
-      nil
-      (long (first (first data))))))
-
-(defn read-bills-onto-chan [dir chan promise]
-  (log/info "Reading Bills Directory " dir)
-  (async/go
-    (doseq [file (utils/walk dir (re-pattern ".*data.json"))]
-      (async/>!! chan (slurp file)))
-    (log/info (str "Finished Reading Bills Directory " dir))
-    (async/>!! chan drained-message)
-    (deliver promise true)))
-
 (defn persist-bill-to-es [connection index type chan promise]
   (es-client/write-to-es connection index type chan promise))
 
 (defn create-bill-sponsor-rel [connection from sponsor]
   (let [existing-rel (nnr/all-for connection from :types [:sponsoring :sponsoredby])
-        sponsor-id (retrieve-id connection (str "MATCH (l:Legislator {thomas: '" sponsor "'}) return id(l)"))
-        exisiting-sponsor (get-node connection sponsor-id)]
+        sponsor-id (utils/retrieve-id connection (str "MATCH (l:Legislator {thomas: '" sponsor "'}) return id(l)"))
+        exisiting-sponsor (utils/get-node connection sponsor-id)]
     (if (and (empty? existing-rel) (not (nil? exisiting-sponsor)))
       (do (nnr/create connection from exisiting-sponsor "sponsoredby")
           (nnr/create connection exisiting-sponsor from "sponsoring")))))
@@ -58,8 +30,8 @@
   (if-not (nil? cosponsors)
     (doseq [cosponsor (str/split cosponsors #",")]
       (let [existing-rel (nnr/all-for connection from :types [:cosponsoring :cosponsoredby])
-            sponsor-id (retrieve-id connection (str "MATCH (l:Legislator {thomas: '" cosponsor "'}) return id(l)"))
-            exisiting-sponsor (get-node connection sponsor-id)]
+            sponsor-id (utils/retrieve-id connection (str "MATCH (l:Legislator {thomas: '" cosponsor "'}) return id(l)"))
+            exisiting-sponsor (utils/get-node connection sponsor-id)]
         (if (and (empty? existing-rel) (not (nil? exisiting-sponsor)))
           (do (nnr/create connection from exisiting-sponsor "cosponsoredby")
               (nnr/create connection exisiting-sponsor from "cosponsoring")))))))
@@ -69,7 +41,7 @@
     (let [[batch drained?] (chan-utils/batch chan 500)]
       (if-not (empty? batch)
         (doseq [bill batch]
-          (let [existing-id (retrieve-bill-id connection (:bill_id bill))]
+          (let [existing-id (utils/retrieve-id connection (str "MATCH (b:Bill {bill_id: '" (:bill_id bill) "'}) return id(b)"))]
             (if (nil? existing-id)
               (let [bill-node (nn/create connection bill)]
                 (nl/add connection bill-node "Bill")
@@ -94,7 +66,7 @@
         mult (async/mult bill-chan)
         _ (async/tap mult es-chan)
         _ (async/tap mult neo-chan)]
-    (read-bills-onto-chan (:bill-dir config) bill-chan read-bill-promise)
+    (chan-utils/slurp-files-onto-chan (:bill-dir config) bill-chan read-bill-promise)
     (persist-bill-to-es connection (:es-index config) (:es-bill-type config) es-chan finished-es-sync)
     (persist-bill-to-neo neo-connection neo-chan finished-neo-sync)
     @read-bill-promise
