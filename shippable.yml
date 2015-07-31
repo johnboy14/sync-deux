@@ -16,5 +16,4 @@ before_script:
 
 # Running the test with Leiningen
 script:
-  - cd sample
   - lein midje :autotest
