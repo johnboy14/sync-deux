@@ -86,8 +86,8 @@
              (let [connection (nr/connect (:neo-url utils/es-config) (:neo-username utils/es-config) (:neo-password utils/es-config))
                    create (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
                    update (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
-                   {:keys [data columns]} (cy/query connection "MATCH (l:Legislator) RETURN l.thomas")]
-               (count data) => 3
-               data => (contains [["00136"] ["01983"] ["00172"]] :in-any-order))))
+                   data (:data (cy/query connection "MATCH (l:Legislator {thomas: '00136'}) RETURN l.thomas"))]
+               (count data) => 1
+               data => (contains [["00136"]]))))
 
 

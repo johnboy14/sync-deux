@@ -16,15 +16,15 @@
             [clojure.string :as str]))
 
 (defn- persist-bill-to-es [connection index type chan promise]
-  (es-client/write-to-es connection index type chan promise))
+  (es-client/write-to-es-from-chan connection index type chan promise))
 
 (defn- create-bill-sponsor-rel [connection from sponsor]
   (let [existing-rel (nnr/all-for connection from :types [:sponsoring :sponsoredby])
         sponsor-id (utils/retrieve-id connection (str "MATCH (l:Legislator {thomas: '" sponsor "'}) return id(l)"))
         exisiting-sponsor (utils/get-node connection sponsor-id)]
-    (if (and (empty? existing-rel) (not (nil? exisiting-sponsor)))
-      (do (nnr/create connection from exisiting-sponsor "sponsoredby")
-          (nnr/create connection exisiting-sponsor from "sponsoring")))))
+    (if-not (nil? exisiting-sponsor)
+      (do (nnr/maybe-create connection from exisiting-sponsor "sponsoredby")
+          (nnr/maybe-create connection exisiting-sponsor from "sponsoring")))))
 
 (defn- create-bill-cosponsor-rel [connection from cosponsors]
   (if-not (nil? cosponsors)
@@ -32,9 +32,9 @@
       (let [existing-rel (nnr/all-for connection from :types [:cosponsoring :cosponsoredby])
             sponsor-id (utils/retrieve-id connection (str "MATCH (l:Legislator {thomas: '" cosponsor "'}) return id(l)"))
             exisiting-sponsor (utils/get-node connection sponsor-id)]
-        (if (and (empty? existing-rel) (not (nil? exisiting-sponsor)))
-          (do (nnr/create connection from exisiting-sponsor "cosponsoredby")
-              (nnr/create connection exisiting-sponsor from "cosponsoring")))))))
+        (if-not (nil? exisiting-sponsor)
+          (do (nnr/maybe-create connection from exisiting-sponsor "cosponsoredby")
+              (nnr/maybe-create connection exisiting-sponsor from "cosponsoring")))))))
 
 (defn- persist-bill-to-neo [connection chan promise]
   (async/go-loop []

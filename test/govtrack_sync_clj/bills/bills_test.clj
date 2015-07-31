@@ -35,6 +35,14 @@
                                  (bills/persist-bills utils/es-config)
                                  (bills/persist-bills utils/es-config)
                                  (let [connection (nr/connect (:neo-url utils/es-config) (:neo-username utils/es-config) (:neo-password utils/es-config))
-                                       {:keys [data columns]} (cy/query connection "MATCH (l:Bill) RETURN l.bill_id")]
-                                   (count data) => 2))))
+                                       bill (:data (cy/query connection "MATCH (l:Bill {bill_id: 's890-114'}) RETURN l.bill_id"))
+                                       sponsoredby-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})-[r:sponsoredby]->(l:Legislator) RETURN l"))
+                                       sponsoring-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})<-[r:sponsoring]-(l:Legislator) RETURN l"))
+                                       cosponsoring-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})<-[r:cosponsoring]-(l:Legislator) RETURN l"))
+                                       cosponsoredby-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})-[r:cosponsoredby]->(l:Legislator) RETURN l"))]
+                                   (count bill) => 1
+                                   (count sponsoredby-relationship) => 1
+                                   (count sponsoring-relationship) => 1
+                                   (count cosponsoring-relationship) => 3
+                                   (count cosponsoredby-relationship) => 3))))
 
