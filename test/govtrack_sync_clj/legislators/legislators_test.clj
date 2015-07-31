@@ -88,6 +88,6 @@
                    update (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
                    {:keys [data columns]} (cy/query connection "MATCH (l:Legislator) RETURN l.thomas")]
                (count data) => 3
-               (first data) => (contains ["00136"]))))
+               data => (contains [["00136"] ["01983"] ["00172"]] :in-any-order))))
 
 

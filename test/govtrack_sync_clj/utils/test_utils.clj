@@ -3,11 +3,10 @@
             [clojurewerkz.neocons.rest.constraints :as nrc]
             [clojurewerkz.elastisch.rest :as esr]
             [clojurewerkz.neocons.rest :as nr]
-            [clojurewerkz.neocons.rest.cypher :as cy]))
+            [clojurewerkz.neocons.rest.cypher :as cy]
+            [clojure.edn :as edn]))
 
-(def es-config {:url "http://localhost:9200" :indexes ["congress"]
-                :neo-url "http://localhost:7474/db/data" :neo-username "neo4j" :neo-password "password"
-                :bill-dir "test-resources/bills" :es-index "congress" :es-bill-type "bill"})
+(def es-config (edn/read-string (slurp "test-resources/config.edn")))
 
 (defn clean-es [config]
   (let [connection (esr/connect (:url config))]
