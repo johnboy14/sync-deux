@@ -1,5 +1,6 @@
 (defproject govtrack-sync-clj "0.0.1-SNAPSHOT"
-  :description "Sync data about Congress into Elastic Search and Neo4J Databases"
+  :description "Sync data about Congress into Elastic Search and Neo4J Databases.
+                Continious Integration through Shippable."
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [clj-yaml "0.4.0"]
                  [clojurewerkz/elastisch "2.1.0"]
