@@ -12,4 +12,5 @@
   :profiles {:dev {:dependencies [[midje "1.7.0"]]}
              :uberjar {:aot :all}}
   :main ^:skip-aot govtrack-sync-clj.main
-  :target-path "target/%s")
+  :target-path "target/%s"
+  :plugins [[lein-midje "3.1.3"]])
