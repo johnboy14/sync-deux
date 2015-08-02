@@ -25,10 +25,10 @@
                                  (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
                                  (bills/persist-bills utils/es-config)
                                  (let [connection (nr/connect (:neo-url utils/es-config) (:neo-username utils/es-config) (:neo-password utils/es-config))
-                                       {:keys [data columns]} (cy/query connection "MATCH (l:Bill) RETURN l.bill_id,l.sponsor,l.cosponsors")]
+                                       {:keys [data columns]} (cy/query connection "MATCH (l:Bill) RETURN l.bill_id,l.sponsor")]
                                    (count data) => 2
-                                   data => (contains [["s1787-114" "00136" "01983"]
-                                                      ["s890-114" "00172" "01558,01965,02076,02194,00116,00174,01828,01984,01332,01969,01937,01844,01983,01900,01837,01929,01010,01901,01531,01829,01567,02182,01823,01247"]]
+                                   data => (contains [["s1787-114" "00136"]
+                                                      ["s890-114" "00172"]]
                                                      :in-any-order)))
                            (fact "Given a directory containing bills, make a relationship between the bill and its sponsor"
                                  (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
