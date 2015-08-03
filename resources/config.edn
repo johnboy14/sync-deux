@@ -1,9 +1,9 @@
-{:url "http://localhost:9200"
+{:url "http://192.168.59.103:9200"
  :indexes ["congress"]
- :neo-url "http://localhost:7474/db/data"
+ :neo-url "http://192.168.59.103:7474/db/data"
  :neo-username "neo4j"
  :neo-password "password"
- :bill-dir "test-resources/bills"
- :legislator-dir "test-resources/legislators/legislators-current.yaml"
+ :bill-dir "/root/congress/bills/114/copy"
+ :legislator-dir "/root/congress/114/legislators/legislators-current.yaml"
  :es-index "congress"
  :es-bill-type "bill"}
