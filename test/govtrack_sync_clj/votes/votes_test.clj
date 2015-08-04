@@ -16,7 +16,9 @@
                                        votes (:data (cy/query connection "MATCH (v:Vote {vote_id:'s55-114.2015'}) return v.vote_id, v.bill_id, v.nay, v.absent, v.yea"))
                                        voterecord (first votes)
                                        vote-bill-relationships (:data (cy/query connection "MATCH (b:Bill {bill_id:'s295-114'})-[r:BillVote]->(v:Vote) return v.vote_id, v.bill_id"))
-                                       billVoteRelationship (first vote-bill-relationships)]
+                                       billVoteRelationship (first vote-bill-relationships)
+                                       voter-vote-relationships (:data (cy/query connection "MATCH (b:Bill {bill_id:'s295-114'})-[r:BillVote]->(v:Vote) return v.vote_id, v.bill_id"))
+                                       voterVoteRelationship (first voter-vote-relationships)]
                                    (count votes) => 1
                                    voterecord => ["s55-114.2015" "s295-114" 0 2 98]
                                    (count vote-bill-relationships) => 1

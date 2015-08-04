@@ -33,7 +33,7 @@ RUN wget -q -O /usr/bin/lein \
 RUN lein
 
 #Create folder for congress information
-RUN cd && mkdir -p congress/bills/114/local congress/bills/114/copy congress/114/legislators
+RUN cd && mkdir -p congress/bills/114/local congress/bills/114/copy congress/votes/114/local congress/votes/114/copy congress/114/legislators
 
 # Install the cron service
 RUN apt-get install cron -y

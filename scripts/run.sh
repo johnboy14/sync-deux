@@ -5,4 +5,4 @@ sh ./sync.sh
 
 #Run Job
 cd /root/code
-lein run
+lein run "../resources/config.edn"
