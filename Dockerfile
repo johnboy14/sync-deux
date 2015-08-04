@@ -35,16 +35,14 @@ RUN lein
 #Create folder for congress information
 RUN cd && mkdir -p congress/bills/114/local congress/bills/114/copy congress/114/legislators
 
-#Use Rsync to retrieve files for congress 114
-RUN cd && rsync -avz --delete --delete-excluded --exclude **/text-versions/ --exclude **data.xml  govtrack.us::govtrackdata/congress-legislators/legislators-current.yaml congress/114/legislators/
+# Install the cron service
+RUN apt-get install cron -y
 
-#Compare whats in the Remote drive first against local and populate the copy directory
-RUN cd && rsync -avz --delete --delete-excluded --exclude **/text-versions/ --exclude **data.xml --compare-dest=../congress/bills/114/local govtrack.us::govtrackdata/congress/114/bills/ congress/bills/114/copy/
-
-#Sync whats in the remote with the local copy in preparation for the next sync job
-RUN cd && rsync -avz --delete --delete-excluded --exclude **/text-versions/ --exclude **data.xml  govtrack.us::govtrackdata/congress/114/bills/ congress/bills/114/local/
-
+#Add code
 ADD . /root/code
 
+#Use the crontab file
+RUN crontab /root/code/scripts/crons.conf
+
 #Run Job
-ENTRYPOINT ["/root/code/run.sh"]
+#ENTRYPOINT ["/root/code/scripts/startup.sh"]
