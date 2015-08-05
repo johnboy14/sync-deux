@@ -4,6 +4,7 @@
  :neo-username "neo4j"
  :neo-password "password"
  :bill-dir "test-resources/bills"
+ :vote-dir "test-resources/votes"
  :legislator-dir "test-resources/legislators/legislators-current.yaml"
  :es-index "congress"
  :es-bill-type "bill"}
