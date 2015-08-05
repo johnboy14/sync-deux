@@ -3,6 +3,7 @@
   (:require [govtrack-sync-clj.utils.test-utils :as utils]
             [govtrack-sync-clj.votes.votes :as votes]
             [govtrack-sync-clj.bills.bills :as bills]
+            [govtrack-sync-clj.legislators.legislators :as leg]
             [clojurewerkz.neocons.rest :as nr]
             [clojurewerkz.neocons.rest.cypher :as cy]))
 
@@ -10,6 +11,7 @@
 
                     (facts "Test cases for creating relationships between votes and bills and votes and legislators"
                            (fact "Given a directory of vote records, create vote record in Neo4J with the correct vote and bill_id"
+                                 (leg/persist-legislators utils/es-config "test-resources/legislators/legislators-current.yaml" "congress" "legislator")
                                  (bills/persist-bills utils/es-config)
                                  (votes/persist-votes utils/es-config)
                                  (let [connection (nr/connect (:neo-url utils/es-config) (:neo-username utils/es-config) (:neo-password utils/es-config))
@@ -17,9 +19,9 @@
                                        voterecord (first votes)
                                        vote-bill-relationships (:data (cy/query connection "MATCH (b:Bill {bill_id:'s295-114'})-[r:BillVote]->(v:Vote) return v.vote_id, v.bill_id"))
                                        billVoteRelationship (first vote-bill-relationships)
-                                       voter-vote-relationships (:data (cy/query connection "MATCH (b:Bill {bill_id:'s295-114'})-[r:BillVote]->(v:Vote) return v.vote_id, v.bill_id"))
-                                       voterVoteRelationship (first voter-vote-relationships)]
+                                       voter-vote-relationships (:data (cy/query connection "MATCH (v:Vote {vote_id:'s55-114.2015'})<-[r:voteon]-(l:Legislator) return r"))]
                                    (count votes) => 1
                                    voterecord => ["s55-114.2015" "s295-114" 0 2 98]
                                    (count vote-bill-relationships) => 1
-                                   billVoteRelationship => ["s55-114.2015" "s295-114"]))))
+                                   billVoteRelationship => ["s55-114.2015" "s295-114"]
+                                   (count voter-vote-relationships) => 5))))

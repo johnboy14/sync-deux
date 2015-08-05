@@ -9,6 +9,13 @@
             [govtrack-sync-clj.utils.chan-utils :as chan-utils]
             [govtrack-sync-clj.utils.file-utils :as utils]))
 
+(defn create-voter-vote-rel [connection vote-node votes]
+  (doseq [voter (:Yea votes)]
+    (let [sponsor-id (utils/retrieve-id connection (str "MATCH (l:Legislator {lis: '" (:id voter) "'}) return id(l)"))
+          exisiting-sponsor (utils/get-node connection sponsor-id)]
+      (if-not (nil? exisiting-sponsor)
+        (nnr/maybe-create connection exisiting-sponsor vote-node "voteon")))))
+
 (defn create-bill-vote-rel [connection vote-node bill_id]
   (let [bill-id (utils/retrieve-id connection (str "MATCH (b:Bill {bill_id: '" bill_id "'}) return id(b)"))
         existing-bill (utils/get-node connection bill-id)]
@@ -25,7 +32,8 @@
             (if (nil? existing-id)
               (let [vote-node (nn/create connection vote-details)]
                 (nl/add connection vote-node "Vote")
-                (create-bill-vote-rel connection vote-node (:bill_id vote-details)))
+                (create-bill-vote-rel connection vote-node (:bill_id vote-details))
+                (create-voter-vote-rel connection vote-node (:votes vote)))
               (nn/update connection existing-id vote-details)))))
       (if (false? drained?)
         (recur)
