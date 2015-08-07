@@ -1,0 +1,7 @@
+00 21 * * * /root/code/scripts/run.sh >> /var/log/cron.log 2>&1
+
+#Don't remove new line
+
+
+
+

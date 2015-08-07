@@ -41,8 +41,11 @@ RUN apt-get install cron -y
 #Add code
 ADD . /root/code
 
+RUN mkdir -p /var/log && touch /var/log/cron.log
+
 #Use the crontab file
-RUN crontab /root/code/scripts/crons.conf
+RUN crontab /root/code/scripts/crontab
+
 
 #Run Job
-#ENTRYPOINT ["/root/code/scripts/startup.sh"]
+CMD ["/bin/bash", "/root/code/scripts/startup.sh", "tail -0f /var/log/cron.log"]

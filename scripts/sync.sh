@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #Delete the contents of the copy in preparation for comparing local with remote
 cd && rm -rf congress/bills/114/copy/*
 cd && rm -rf congress/votes/114/copy/*

@@ -44,7 +44,7 @@
 
 (defn- persist-bill-to-neo [connection chan promise]
   (async/go-loop []
-    (let [[batch drained?] (chan-utils/batch chan 500)]
+    (let [[batch drained?] (chan-utils/batch chan 10)]
       (if-not (empty? batch)
         (doseq [bill batch]
           (let [bill-details (:bill-details bill)

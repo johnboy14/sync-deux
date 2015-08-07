@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 #Sync with govtrack
-sh ./sync.sh
+sh /root/code/scripts/sync.sh
 
 #Run Job
 cd /root/code
-lein run "../resources/config.edn"
+lein run "/root/code/resources/config.edn"
