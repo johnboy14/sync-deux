@@ -32,6 +32,16 @@
           (do (nnr/maybe-create connection from exisiting-sponsor "cosponsoredby")
               (nnr/maybe-create connection exisiting-sponsor from "cosponsoring")))))))
 
+(defn- create-bill-subject-rel [connection from subject]
+  (if-not (nil? subject)
+    (let [subject-id (utils/retrieve-id connection (str "MATCH (s:Subject {name: '" subject "'}) return id(s)"))
+         exisiting-subject (utils/get-node connection subject-id)]
+     (if-not (nil? exisiting-subject)
+       (nnr/maybe-create connection exisiting-subject from "hasSubjectTerm")
+       (let [subject-node (nn/create connection {:name subject})
+             _ (nl/add connection subject-node "Subject")]
+         (nnr/maybe-create connection subject-node from "hasSubjectTerm"))))))
+
 (defn- persist-bill-to-neo [connection chan promise]
   (async/go-loop []
     (let [[batch drained?] (chan-utils/batch chan 500)]
@@ -40,14 +50,17 @@
           (let [bill-details (:bill-details bill)
                 cosponsors (:cosponsors bill)
                 existing-id (utils/retrieve-id connection (str "MATCH (b:Bill {bill_id: '" (:bill_id bill-details) "'}) return id(b)"))]
+            (log/info (str "Writing " (count batch) " bill's to Neo4J"))
             (if (nil? existing-id)
               (let [bill-node (nn/create connection bill-details)]
                 (nl/add connection bill-node "Bill")
                 (create-bill-sponsor-rel connection bill-node (:sponsor bill-details))
-                (create-bill-cosponsor-rel connection bill-node cosponsors))
+                (create-bill-cosponsor-rel connection bill-node cosponsors)
+                (create-bill-subject-rel connection bill-node (:subjects_top_term bill-details)))
               (nn/update connection existing-id bill-details)))))
       (if (false? drained?)
-        (recur)
+        (do (log/info (str "Finished writing " (count batch) " bills to Neo4J"))
+            (recur))
         (do (log/info "Finished uploading Bills to Neo4J")
             (deliver promise true))))))
 

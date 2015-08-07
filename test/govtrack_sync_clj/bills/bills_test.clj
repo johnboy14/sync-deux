@@ -37,11 +37,13 @@
                                  (bills/persist-bills utils/es-config)
                                  (let [connection (nr/connect (:neo-url utils/es-config) (:neo-username utils/es-config) (:neo-password utils/es-config))
                                        bill (:data (cy/query connection "MATCH (l:Bill {bill_id: 's890-114'}) RETURN l.bill_id"))
+                                       subject-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})<-[r:hasSubjectTerm]-(s:Subject) RETURN s.name"))
                                        sponsoredby-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})-[r:sponsoredby]->(l:Legislator) RETURN l"))
                                        sponsoring-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})<-[r:sponsoring]-(l:Legislator) RETURN l"))
                                        cosponsoring-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})<-[r:cosponsoring]-(l:Legislator) RETURN l"))
                                        cosponsoredby-relationship (:data (cy/query connection "MATCH (b:Bill {bill_id: 's890-114'})-[r:cosponsoredby]->(l:Legislator) RETURN l"))]
                                    (count bill) => 1
+                                   subject-relationship => [["Public lands and natural resources"]]
                                    (count sponsoredby-relationship) => 1
                                    (count sponsoring-relationship) => 1
                                    (count cosponsoring-relationship) => 3

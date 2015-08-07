@@ -31,6 +31,7 @@
     (try
       (nrc/drop-unique connection "Legislator" "thomas")
       (nrc/drop-unique connection "Bill" "bill_id")
+      (nrc/drop-unique connection "Subject" "name")
       (catch Exception e (println e)))))
 
 (defn create-constraints [config]
@@ -38,6 +39,7 @@
     (try
       (nrc/create-unique connection "Legislator" "thomas")
       (nrc/create-unique connection "Bill" "bill_id")
+      (nrc/create-unique connection "Subject" "name")
       (catch Exception e (println e)))))
 
 (defn teardown-setup []
