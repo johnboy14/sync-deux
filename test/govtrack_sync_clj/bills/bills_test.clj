@@ -46,6 +46,6 @@
                                    subject-relationship => [["Public lands and natural resources"]]
                                    (count sponsoredby-relationship) => 1
                                    (count sponsoring-relationship) => 1
-                                   (count cosponsoring-relationship) => 3
-                                   (count cosponsoredby-relationship) => 3))))
+                                   (count cosponsoring-relationship) => 24
+                                   (count cosponsoredby-relationship) => 24))))
 

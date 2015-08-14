@@ -11,53 +11,22 @@
             [govtrack-sync-clj.elasticsearch.elasticsearch :as es-client]
             [govtrack-sync-clj.utils.file-utils :as utils]
             [govtrack-sync-clj.utils.chan-utils :as chan-utils]
-            [govtrack-sync-clj.bills.transformers :as transformer]))
+            [govtrack-sync-clj.bills.transformers :as transformer]
+            [govtrack-sync-clj.bills.query-builder :as builder]
+            [clojurewerkz.neocons.rest.cypher :as cy]))
 
 (defn- persist-bill-to-es [connection index type chan promise]
   (es-client/write-to-es-from-chan connection index type chan promise))
 
-(defn- create-bill-sponsor-rel [connection from sponsor]
-  (let [sponsor-id (utils/retrieve-id connection (str "MATCH (l:Legislator {thomas: '" sponsor "'}) return id(l)"))
-        exisiting-sponsor (utils/get-node connection sponsor-id)]
-    (if-not (nil? exisiting-sponsor)
-      (do (nnr/maybe-create connection from exisiting-sponsor "sponsoredby")
-          (nnr/maybe-create connection exisiting-sponsor from "sponsoring")))))
-
-(defn- create-bill-cosponsor-rel [connection from cosponsors]
-  (if-not (nil? cosponsors)
-    (doseq [cosponsor cosponsors]
-      (let [sponsor-id (utils/retrieve-id connection (str "MATCH (l:Legislator {thomas: '" (:thomas_id cosponsor) "'}) return id(l)"))
-            exisiting-sponsor (utils/get-node connection sponsor-id)]
-        (if-not (nil? exisiting-sponsor)
-          (do (nnr/maybe-create connection from exisiting-sponsor "cosponsoredby")
-              (nnr/maybe-create connection exisiting-sponsor from "cosponsoring")))))))
-
-(defn- create-bill-subject-rel [connection from subject]
-  (if-not (nil? subject)
-    (let [subject-id (utils/retrieve-id connection (str "MATCH (s:Subject {name: '" subject "'}) return id(s)"))
-         exisiting-subject (utils/get-node connection subject-id)]
-     (if-not (nil? exisiting-subject)
-       (nnr/maybe-create connection exisiting-subject from "hasSubjectTerm")
-       (let [subject-node (nn/create connection {:name subject})
-             _ (nl/add connection subject-node "Subject")]
-         (nnr/maybe-create connection subject-node from "hasSubjectTerm"))))))
-
 (defn- persist-bill-to-neo [connection chan promise]
   (async/go-loop []
     (let [[batch drained?] (chan-utils/batch chan 10)]
+      (log/info (str "Uploading " (count batch) " bills to Neo4J"))
       (if-not (empty? batch)
         (doseq [bill batch]
           (let [bill-details (:bill-details bill)
-                cosponsors (:cosponsors bill)
-                existing-id (utils/retrieve-id connection (str "MATCH (b:Bill {bill_id: '" (:bill_id bill-details) "'}) return id(b)"))]
-            (log/info (str "Writing " (count batch) " bill's to Neo4J"))
-            (if (nil? existing-id)
-              (let [bill-node (nn/create connection bill-details)]
-                (nl/add connection bill-node "Bill")
-                (create-bill-sponsor-rel connection bill-node (:sponsor bill-details))
-                (create-bill-cosponsor-rel connection bill-node cosponsors)
-                (create-bill-subject-rel connection bill-node (:subjects_top_term bill-details)))
-              (nn/update connection existing-id bill-details)))))
+                cosponsors (:cosponsors bill)]
+            (cy/query connection (builder/construct-bill-merge-query bill-details cosponsors) {:props bill-details}))))
       (if (false? drained?)
         (do (log/info (str "Finished writing " (count batch) " bills to Neo4J"))
             (recur))
