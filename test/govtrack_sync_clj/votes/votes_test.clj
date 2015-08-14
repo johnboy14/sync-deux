@@ -24,4 +24,4 @@
                                    voterecord => ["s55-114.2015" "s295-114" 0 2 98]
                                    (count vote-bill-relationships) => 1
                                    billVoteRelationship => ["s55-114.2015" "s295-114"]
-                                   (count voter-vote-relationships) => 5))))
+                                   (count voter-vote-relationships) => 100))))

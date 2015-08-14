@@ -19,6 +19,7 @@
       (dissoc :bill)
       (set-vote-counts)
       (dissoc :votes)
+      (dissoc :amendment)
       ((fn [m] (into {} (remove (fn [[_ v]] (nil? v)) m))))))
 
 (defn construct-neo-vote-payload [vote]
