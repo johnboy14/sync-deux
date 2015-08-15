@@ -61,8 +61,10 @@
 (defn- construct-and-persist-neo4j-legislators [connection file]
   (let [legislators (yaml/parse-string (slurp (java.io.File. file)))
         parsed-legislators (parse-legislators legislators)]
+    (log/info (str "Uploading Legislators to Neo4J"))
     (doseq [legislator parsed-legislators]
-      (cy/query connection (builder/construct-legislator-merge-query legislator) {:props legislator}))))
+      (cy/query connection (builder/construct-legislator-merge-query legislator) {:props legislator}))
+    (log/info (str "Finished Uploading legislators to Neo4J"))))
 
 (defn- persist-legislators-neo [file connection]
   (construct-and-persist-neo4j-legislators connection file))

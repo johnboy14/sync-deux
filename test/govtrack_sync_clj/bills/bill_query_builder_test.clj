@@ -1,6 +1,8 @@
 (ns govtrack-sync-clj.bills.bill-query-builder-test
   (:use midje.sweet)
-  (:require [cheshire.core :as ch]))
+  (:require [cheshire.core :as ch]
+            [govtrack-sync-clj.bills.query-builder :as b]
+            [govtrack-sync-clj.bills.transformers :as t]))
 
 (defn bill-merge-query [bill]
   (let [bill-id (get-in bill [:bill_id])]
@@ -21,4 +23,6 @@
 
 (def bill (ch/parse-string (slurp "test-resources/bills/s/s295/data.json") true))
 (fact ""
-      (str (bill-merge-query bill) " " (bill-sponsor-query bill) " " (bill-subject-query bill) " " (bill-cosponsor-query bill)))
+      ;(str (bill-merge-query bill) " " (bill-sponsor-query bill) " " (bill-subject-query bill) " " (bill-cosponsor-query bill))
+      ;(println (b/construct-bills-merge-transaction-query [(t/construct-neo-bill-payload bill)]))
+      )

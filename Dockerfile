@@ -1,8 +1,13 @@
 FROM ubuntu:14.04
-MAINTAINER john
+
+MAINTAINER john@placeavote.com
+
 ENV REFRESHED_AT 2015-08-02
 
+RUN echo "Rebuilding Image"
+
 RUN apt-get update
+
 RUN apt-get -y install software-properties-common
 
 #Install Rsync to pull data from govtrack
@@ -33,7 +38,7 @@ RUN wget -q -O /usr/bin/lein \
 RUN lein
 
 #Create folder for congress information
-RUN cd && mkdir -p congress/bills/114/local congress/bills/114/copy congress/votes/114/local congress/votes/114/copy congress/114/legislators
+RUN cd && mkdir -p congress/bills/114/local congress/bills/114/copy congress/votes/114/local congress/votes/114/copy congress/legislators/114
 
 # Install the cron service
 RUN apt-get install cron -y

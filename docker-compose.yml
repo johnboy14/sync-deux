@@ -1,15 +1,4 @@
 worker:
   build: .
-  command: scripts/startup.sh
-  ports:
-      - 9200:9200
-      - 7474:7474
   volumes:
     - .:/app
-  links:
-    - elasticsearch
-    - neo4j
-elasticsearch:
-  image: elasticsearch
-neo4j:
-  image: tpires/neo4j

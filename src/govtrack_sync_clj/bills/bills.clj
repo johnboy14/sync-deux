@@ -3,24 +3,42 @@
   (:require [clojurewerkz.elastisch.rest :as nsr]
             [clojurewerkz.elastisch.rest.document]
             [clojurewerkz.neocons.rest :as nr]
-            [clojurewerkz.neocons.rest.nodes :as nn]
-            [clojurewerkz.neocons.rest.relationships :as nnr]
-            [clojurewerkz.neocons.rest.labels :as nl]
             [clojure.core.async :as async]
             [clojure.tools.logging :as log]
             [govtrack-sync-clj.elasticsearch.elasticsearch :as es-client]
-            [govtrack-sync-clj.utils.file-utils :as utils]
             [govtrack-sync-clj.utils.chan-utils :as chan-utils]
             [govtrack-sync-clj.bills.transformers :as transformer]
             [govtrack-sync-clj.bills.query-builder :as builder]
-            [clojurewerkz.neocons.rest.cypher :as cy]))
+            [clojurewerkz.neocons.rest.cypher :as cy]
+            [clojurewerkz.neocons.rest.transaction :as tx]))
 
 (defn- persist-bill-to-es [connection index type chan promise]
   (es-client/write-to-es-from-chan connection index type chan promise))
 
+;(defn- persist-bill-to-neo [connection chan promise]
+;  (loop []
+;    (let [[batch drained?] (chan-utils/batch chan 5)]
+;      (log/info (str "Uploading " (count batch) " bills to Neo4J"))
+;      (if-not (empty? batch)
+;        (let [transaction (tx/begin-tx connection)]
+;          (tx/with-transaction
+;            connection
+;            transaction
+;            true
+;            (let [[_ [r]] (tx/execute
+;                            connection
+;                            transaction
+;                            (builder/construct-bills-merge-transaction-query batch))]
+;              (log/info (:data r))))))
+;      (if (false? drained?)
+;        (do (log/info (str "Finished writing " (count batch) " bills to Neo4J"))
+;            (recur))
+;        (do (log/info "Finished uploading Bills to Neo4J")
+;            (deliver promise true))))))
+
 (defn- persist-bill-to-neo [connection chan promise]
   (async/go-loop []
-    (let [[batch drained?] (chan-utils/batch chan 10)]
+    (let [[batch drained?] (chan-utils/batch chan 500)]
       (log/info (str "Uploading " (count batch) " bills to Neo4J"))
       (if-not (empty? batch)
         (doseq [bill batch]

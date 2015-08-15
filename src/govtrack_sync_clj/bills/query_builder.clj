@@ -1,4 +1,5 @@
-(ns govtrack-sync-clj.bills.query-builder)
+(ns govtrack-sync-clj.bills.query-builder
+  (:require [clojurewerkz.neocons.rest.transaction :as t]))
 
 (defn bill-merge-query [bill]
   (let [bill-id (get-in bill [:bill_id])]
@@ -19,3 +20,12 @@
 
 (defn construct-bill-merge-query [bill-details cosponsors]
   (str (bill-merge-query bill-details) " " (bill-sponsor-query bill-details) " " (bill-subject-query bill-details) " " (bill-cosponsor-query cosponsors)))
+
+(defn construct-bills-merge-transaction-query [bills]
+  (loop [bills bills
+         statements []]
+    (if (empty? bills)
+      statements
+      (recur (rest bills)
+             (conj statements (t/statement (construct-bill-merge-query (:bill-details (first bills)) (:cosponsors (first bills)))
+                                           {:props (:bill-details (first bills))}))))))
