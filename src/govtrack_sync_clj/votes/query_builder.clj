@@ -1,4 +1,5 @@
-(ns govtrack-sync-clj.votes.query-builder)
+(ns govtrack-sync-clj.votes.query-builder
+  (:require [clojurewerkz.neocons.rest.transaction :as t]))
 
 (defn construct-vote-query [vote-detail]
   (let [vote-id (get-in vote-detail [:vote_id])]
@@ -19,3 +20,12 @@
        (construct-votes-query (:Nea votes) :nea) " "
        (construct-votes-query ((keyword "Not Voting") votes) :notvoting) " "
        (construct-votes-query (:Present votes) :present) " "))
+
+(defn construct-votes-merge-transaction-query [votes]
+  (loop [votes votes
+         statements []]
+    (if (empty? votes)
+      statements
+      (recur (rest votes)
+             (conj statements (t/statement (construct-vote-merge-query (:vote-details (first votes)) (:votes (first votes)))
+                                           {:props (:vote-details (first votes))}))))))
