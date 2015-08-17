@@ -9,8 +9,8 @@
             [govtrack-sync-clj.utils.chan-utils :as chan-utils]
             [govtrack-sync-clj.bills.transformers :as transformer]
             [govtrack-sync-clj.bills.query-builder :as builder]
-            [clojurewerkz.neocons.rest.cypher :as cy]
-            [clojurewerkz.neocons.rest.transaction :as tx]))
+            [clojurewerkz.neocons.rest.transaction :as tx]
+            [govtrack-sync-clj.utils.cypher-utils :as transaction-utils]))
 
 (defn- persist-bill-to-es [connection index type chan promise]
   (es-client/write-to-es-from-chan connection index type chan promise))
@@ -20,16 +20,7 @@
     (let [[batch drained?] (chan-utils/batch chan 500)]
       (log/info (str "Uploading " (count batch) " bills to Neo4J"))
       (if-not (empty? batch)
-        (let [transaction (tx/begin-tx connection)]
-          (tx/with-transaction
-            connection
-            transaction
-            true
-            (let [[_ [r]] (tx/execute
-                            connection
-                            transaction
-                            (builder/construct-bills-merge-transaction-query batch))]
-              (log/info (:data r))))))
+        (transaction-utils/with-tx connection (builder/construct-bills-merge-transaction-query batch)))
       (if (false? drained?)
         (do (log/info (str "Finished writing " (count batch) " bills to Neo4J"))
             (recur))

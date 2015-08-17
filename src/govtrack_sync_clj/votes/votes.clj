@@ -2,27 +2,17 @@
   (:require [clojure.core.async :as async]
             [clojure.tools.logging :as log]
             [clojurewerkz.neocons.rest :as nr]
-            [clojurewerkz.neocons.rest.cypher :as cy]
-            [clojurewerkz.neocons.rest.transaction :as tx]
             [govtrack-sync-clj.votes.transformers :as transformers]
             [govtrack-sync-clj.utils.chan-utils :as chan-utils]
-            [govtrack-sync-clj.votes.query-builder :as builder]))
+            [govtrack-sync-clj.votes.query-builder :as builder]
+            [govtrack-sync-clj.utils.cypher-utils :as transaction-utils]))
 
 (defn- persist-votes-to-neo [connection chan promise]
   (loop []
     (let [[batch drained?] (chan-utils/batch chan 10)]
       (log/info (str "Uploading " (count batch) " Votes to Neo4J"))
       (if-not (empty? batch)
-        (let [transaction (tx/begin-tx connection)]
-          (tx/with-transaction
-            connection
-            transaction
-            true
-            (let [[_ [r]] (tx/execute
-                            connection
-                            transaction
-                            (builder/construct-votes-merge-transaction-query batch))]
-              (log/info (:data r))))))
+        (transaction-utils/with-tx connection (builder/construct-votes-merge-transaction-query batch)))
       (if (false? drained?)
         (do (log/info (str "Finished writing " (count batch) " votes to Neo4J"))
             (recur))
