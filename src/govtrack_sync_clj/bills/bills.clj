@@ -17,7 +17,7 @@
 
 (defn- persist-bill-to-neo [connection chan promise]
   (loop []
-    (let [[batch drained?] (chan-utils/batch chan 500)]
+    (let [[batch drained?] (chan-utils/batch chan 2)]
       (log/info (str "Uploading " (count batch) " bills to Neo4J"))
       (if-not (empty? batch)
         (transaction-utils/with-tx connection (builder/construct-bills-merge-transaction-query batch)))

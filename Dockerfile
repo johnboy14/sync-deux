@@ -4,7 +4,7 @@ MAINTAINER john@placeavote.com
 
 ENV REFRESHED_AT 2015-08-02
 
-RUN echo "Rebuilding Image"
+RUN echo "Rebuilding Image 4"
 
 RUN apt-get update
 

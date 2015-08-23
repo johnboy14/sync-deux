@@ -143,6 +143,15 @@
     },
     {
       "district": null,
+      "name": "Ayotte, Kelly",
+      "sponsored_at": "2015-01-28",
+      "state": "NH",
+      "thomas_id": "02075",
+      "title": "Sen",
+      "withdrawn_at": null
+    },
+    {
+      "district": null,
       "name": "Blumenthal, Richard",
       "sponsored_at": "2015-01-28",
       "state": "CT",

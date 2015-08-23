@@ -3,3 +3,9 @@
 .nrepl-port
 .lein-repl-history
 govtrack_sync_clj.iml
+.lein-deps-sum
+.lein-plugins/
+.lein-deps-sum
+.lein-plugins/
+sync-deux.iml
+

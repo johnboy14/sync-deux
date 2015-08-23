@@ -3,8 +3,8 @@
  :neo-url "http://localhost:7474/db/data"
  :neo-username "neo4j"
  :neo-password "password"
- :bill-dir "test-resources/bills"
- :vote-dir "test-resources/votes"
- :legislator-dir "test-resources/legislators/legislators-current.yaml"
+ :bill-dir "/root/congress/bills/114"
+ :vote-dir "/root/congress/votes/114"
+ :legislator-dir "root/congress/legislators/114/legislators-current.yaml"
  :es-index "congress"
  :es-bill-type "bill"}
